@@ -20,4 +20,28 @@
         android:layout_height="wrap_content"
         android:text="챌린지 목표"
         android:textSize="14sp" />
+
+    <!-- D-day 표시 -->
+    <TextView
+        android:id="@+id/ddayText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="D-day"
+        android:textSize="12sp" />
+
+    <!-- 체크박스 추가 -->
+    <CheckBox
+        android:id="@+id/challengeCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="완료" />
+
+    <!-- 진행 상태를 나타내는 ProgressBar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:progress="0"
+        android:max="100"
+        android:visibility="gone" /> <!-- 초기에는 숨김 처리 -->
 </LinearLayout>
