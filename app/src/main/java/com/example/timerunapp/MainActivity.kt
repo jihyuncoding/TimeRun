@@ -15,6 +15,9 @@ class MainActivity : AppCompatActivity() {
         // BottomNavigationView 초기화
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
 
+        // 초기 선택된 아이템을 홈으로 설정
+        bottomNavigationView.selectedItemId = R.id.fragment_home
+
         // 하단 네비게이션 아이템 선택 시 화면 전환
         bottomNavigationView.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
