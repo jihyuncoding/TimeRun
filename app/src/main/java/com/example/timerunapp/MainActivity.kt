@@ -15,33 +15,28 @@ class MainActivity : AppCompatActivity() {
         // BottomNavigationView 초기화
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
 
-
         // 하단 네비게이션 아이템 선택 시 화면 전환
         bottomNavigationView.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.fragment_home-> {
-                    val mainFragment = FragmentMain()
-                    loadFragment(mainFragment)
+                R.id.fragment_home -> {
+                    loadFragment(FragmentMain())
                     true
                 }
                 R.id.fragment_add -> {
-                    val addTodoFragment = FragmentAddTodo()
-                    loadFragment(addTodoFragment)
+                    loadFragment(FragmentAddTodo())
                     true
                 }
                 R.id.fragment_search -> {
-                    val profileFragment = FragmentInfoTodo()
-                    loadFragment(profileFragment)
+                    loadFragment(FragmentInfoTodo())
                     true
                 }
                 else -> false
             }
         }
 
-        // 앱 실행 시 처음 화면은 Main Fragment로 설정
+        // 앱 실행 시 처음 화면 설정
         if (savedInstanceState == null) {
-            val fragment = FragmentMain() // 처음 화면을 "MainFragment"로 설정
-            loadFragment(fragment)
+            loadFragment(FragmentMain()) // "MainFragment"로 설정
         }
     }
 
@@ -49,8 +44,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadFragment(fragment: Fragment) {
         val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
         transaction.replace(R.id.fragment_container, fragment)
-        transaction.addToBackStack(null) // 뒤로가기 버튼을 위한 트랜잭션 추가
+        transaction.addToBackStack(null) // 뒤로가기 버튼 지원
         transaction.commit()
     }
 }
-
