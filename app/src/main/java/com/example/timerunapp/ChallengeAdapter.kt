@@ -32,7 +32,7 @@ class ChallengeAdapter(
         // 데이터 바인딩
         nameTextView.text = challenge.name
         goalTextView.text = challenge.goal
-        // dateTextView.text = challenge.date // 기간 표시
+        dateTextView.text = challenge.dDay // 기간 표시
         categoryTextView.text = challenge.category // 카테고리 표시
 
         // 각 항목에 클릭 이벤트 설정
