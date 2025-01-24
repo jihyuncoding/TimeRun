@@ -12,23 +12,24 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TimeRunApp"
         tools:targetApi="31">
-
+        <activity
+            android:name=".UpdateTodo"
+            android:exported="false" />
         <!-- IntroActivity를 기본 화면으로 설정 -->
         <activity
             android:name=".IntroActivity"
             android:exported="true">
+
             <!-- 앱 실행 시 기본적으로 시작할 화면 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- MainActivity는 실행되지 않도록 설정 (IntroActivity에서 이동) -->
+        </activity> <!-- MainActivity는 실행되지 않도록 설정 (IntroActivity에서 이동) -->
         <activity
             android:name=".MainActivity"
             android:exported="true" />
-
     </application>
 
 </manifest>
