@@ -11,5 +11,6 @@ data class Challenge(
     val duration: Int,
     val isCompleted: Int,
     val dDay: String,
-    val endDate: String
+    val endDate: String,
+    var isChecked: Boolean = false // 체크 상태 추가
 )

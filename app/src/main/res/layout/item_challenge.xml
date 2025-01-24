@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -11,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_marginStart="16dp" />
+        android:layout_marginStart="12dp" />
 
     <!-- 챌린지 이름 -->
     <TextView
@@ -42,9 +41,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_toEndOf="@id/challengeGoal"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="120dp">
+        android:layout_marginStart="280dp"
+        android:layout_marginTop="2dp">
 
         <TextView
             android:id="@+id/challengeDate"
