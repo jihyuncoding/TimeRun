@@ -1,23 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- 체크박스 -->
+    <CheckBox
+        android:id="@+id/checkBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="16dp" />
+
+    <!-- 챌린지 이름 -->
     <TextView
         android:id="@+id/challengeName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="챌린지 이름"
         android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:layout_toEndOf="@id/checkBox"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="16dp"/>
 
+    <!-- 챌린지 목표 -->
     <TextView
         android:id="@+id/challengeGoal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="챌린지 목표"
-        android:textSize="14sp" />
-</LinearLayout>
+        android:textSize="14sp"
+        android:layout_toEndOf="@id/checkBox"
+        android:layout_below="@id/challengeName"
+        android:layout_marginStart="16dp"/>
+
+    <!-- 기간과 카테고리 -->
+    <LinearLayout
+        android:id="@+id/categoryAndDateLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_toEndOf="@id/challengeGoal"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="120dp">
+
+        <TextView
+            android:id="@+id/challengeDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="기간"
+            android:textSize="14sp"
+            android:layout_marginEnd="20dp" />
+
+        <TextView
+            android:id="@+id/categorySpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="카테고리"
+            android:textSize="14sp"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
+
+    <!-- "..." 아이콘 -->
+    <ImageView
+        android:id="@+id/optionsIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_below="@id/categoryAndDateLayout"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="-31dp"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/ic_options" />
+
+</RelativeLayout>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <!-- 챌린지 제목과 기간 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/challengeName"
+            android:layout_width="114dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="16dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="8dp"
+            android:text="챌린지 이름"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/challengeDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="기간"
+            android:textSize="16sp" />
+
+        <!-- 챌린지 카테고리 -->
+        <TextView
+            android:id="@+id/categorySpinner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="카테고리"
+            android:textSize="16sp"
+            android:paddingBottom="8dp" />
+    </LinearLayout>
+
+    <!-- 챌린지 목표 -->
+    <TextView
+        android:id="@+id/challengeGoal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="챌린지 목표"
+        android:textSize="16sp"
+        android:paddingBottom="8dp" />
+
+    <!-- 수정, 삭제 버튼 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingTop="16dp">
+
+        <Button
+            android:id="@+id/editButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="수정"
+            android:layout_marginEnd="16dp"/>
+
+        <Button
+            android:id="@+id/deleteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="삭제"/>
+    </LinearLayout>
+
+</LinearLayout>

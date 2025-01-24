@@ -4,9 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ListView
+import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.example.timerunapp.R
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class FragmentInfoTodo : Fragment() {
 
@@ -14,13 +16,11 @@ class FragmentInfoTodo : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // fragment_info_todo.xml 레이아웃을 연결
         val rootView = inflater.inflate(R.layout.fragment_info_todo, container, false)
 
-        // ListView를 찾기
         val listView: ListView = rootView.findViewById(R.id.listView)
 
-        // DB에서 데이터를 읽어오기
+        // DB에서 데이터 읽기
         val dbManager = DBManager(requireContext())
         val db = dbManager.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM Challenges", null)
@@ -40,12 +40,31 @@ class FragmentInfoTodo : Fragment() {
         }
         cursor.close()
 
-        // 어댑터 생성하고 ListView에 설정
-        val adapter = ChallengeAdapter(requireContext(), challenges)
+        // 어댑터 생성
+        val adapter = ChallengeAdapter(requireContext(), challenges) { challenge ->
+            showChallengeDetails(challenge) // 클릭된 챌린지 세부 정보 표시
+        }
         listView.adapter = adapter
 
         return rootView
     }
+
+    // 세부 정보를 표시하는 함수
+    private fun showChallengeDetails(challenge: Challenge) {
+        val dialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.dialog_challenge_details, null)
+
+        val nameTextView = view.findViewById<TextView>(R.id.challengeName)
+        val goalTextView = view.findViewById<TextView>(R.id.challengeGoal)
+        val categoryTextView = view.findViewById<TextView>(R.id.categorySpinner)
+        val dateTextView = view.findViewById<TextView>(R.id.challengeDate)
+
+        nameTextView.text = challenge.name
+        goalTextView.text = challenge.goal
+        categoryTextView.text = challenge.category
+        dateTextView.text = "${challenge.startDate} ~ ${challenge.endDate}"
+
+        dialog.setContentView(view)
+        dialog.show()
+    }
 }
-
-
