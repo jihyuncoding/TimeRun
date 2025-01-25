@@ -1,114 +1,163 @@
 package com.example.timerunapp
 
+import android.app.AlertDialog
 import android.content.ContentValues
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ListView
+import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 class FragmentInfoTodo : Fragment() {
+
+    private lateinit var dbManager: DBManager
+    private lateinit var listView: ListView
+    private lateinit var adapter: ChallengeAdapter
+    private var challenges = mutableListOf<Challenge>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // fragment_info_todo.xml 레이아웃을 연결
+        // fragment_info_todo.xml 레이아웃 연결
         val rootView = inflater.inflate(R.layout.fragment_info_todo, container, false)
 
-        // ListView를 찾기
-        val listView: ListView = rootView.findViewById(R.id.listView)
+        dbManager = DBManager(requireContext())
 
-        // DB에서 데이터를 읽어오기
-        val dbManager = DBManager(requireContext())
-        val db = dbManager.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM Challenges", null)
+        // ListView 연결
+        listView = rootView.findViewById(R.id.listView)
 
-        val challenges = mutableListOf<Challenge>()
-
-        if (cursor.moveToFirst()) {
-            do {
-                try {
-                    val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
-                    val name = cursor.getString(cursor.getColumnIndexOrThrow("name")) ?: "이름 없음"
-                    val goal = cursor.getString(cursor.getColumnIndexOrThrow("goal")) ?: "목표 없음"
-                    val category = cursor.getString(cursor.getColumnIndexOrThrow("category")) ?: "카테고리 없음"
-                    val startDate = cursor.getString(cursor.getColumnIndexOrThrow("start_date")) ?: "0000-00-00"
-                    val endDate = cursor.getString(cursor.getColumnIndexOrThrow("end_date")) ?: "0000-00-00"
-
-                    // duration 열 처리 (존재 여부 확인 후 기본값 설정)
-                    val duration = cursor.getColumnIndex("duration")?.let {
-                        cursor.getInt(it)
-                    } ?: 0
-
-                    // is_completed 처리 (존재하지 않는 경우 기본값 설정)
-                    val isCompleted = cursor.getColumnIndex("is_completed")?.let {
-                        cursor.getInt(it)
-                    } ?: 0
-
-                    // D-day 계산
-                    val dDay = calculateDDay(startDate, duration)
-
-                    // DB 업데이트
-                    val dDayValue = dDay.removePrefix("D-").toIntOrNull() ?: 0
-                    val contentValues = ContentValues().apply {
-                        put("d_day", dDayValue)
-                    }
-                    db.update("Challenges", contentValues, "id=?", arrayOf(id.toString()))
-
-                    // Challenge 생성 후 리스트에 추가
-                    challenges.add(
-                        Challenge(
-                            id, name, goal, category, startDate, duration, isCompleted, dDay, endDate
-                        )
-                    )
-                } catch (e: Exception) {
-                    Log.e("FragmentInfoTodo", "Error processing challenge: ${e.message}")
-                }
-            } while (cursor.moveToNext())
-        } else {
-            Log.d("FragmentInfoTodo", "No data found in Challenges table")
-        }
-
-        cursor.close()
-
-        // 어댑터 생성하고 ListView에 설정
-        if (challenges.isEmpty()) {
-            Log.d("FragmentInfoTodo", "No challenges to display")
-            // TODO: 빈 화면 처리를 위한 UI 작업 추가
-        } else {
-            val adapter = ChallengeAdapter(requireContext(), challenges)
-            listView.adapter = adapter
-        }
+        // 데이터 로드 및 UI 초기화
+        refreshData()
 
         return rootView
     }
 
-    // D-day 계산 함수(앱 실행 때마다 날짜 계산해서 DB에 있는 디데이가 변경됨)
+    // 데이터 새로고침 함수
+    private fun refreshData() {
+        val db = dbManager.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM Challenges", null)
+
+        challenges.clear()
+        if (cursor.moveToFirst()) {
+            do {
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+                val name = cursor.getString(cursor.getColumnIndexOrThrow("name")) ?: "이름 없음"
+                val goal = cursor.getString(cursor.getColumnIndexOrThrow("goal")) ?: "목표 없음"
+                val category = cursor.getString(cursor.getColumnIndexOrThrow("category")) ?: "카테고리 없음"
+                val startDate = cursor.getString(cursor.getColumnIndexOrThrow("start_date")) ?: "0000-00-00"
+                val duration = cursor.getInt(cursor.getColumnIndexOrThrow("duration"))
+                val isCompleted = cursor.getInt(cursor.getColumnIndexOrThrow("is_completed"))
+                val endDate = cursor.getString(cursor.getColumnIndexOrThrow("end_date")) ?: "0000-00-00"
+
+                // D-Day 계산
+                val dDay = calculateDDay(startDate, duration)
+
+                challenges.add(
+                    Challenge(
+                        id, name, goal, category, startDate, duration, isCompleted, dDay, endDate
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+
+        // 어댑터 연결
+        adapter = ChallengeAdapter(requireContext(), challenges) { challenge ->
+            showChallengeDetails(challenge)
+        }
+        listView.adapter = adapter
+    }
+
+    // 세부 정보 표시
+    private fun showChallengeDetails(challenge: Challenge) {
+        val dialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.dialog_challenge_details, null)
+
+        val nameTextView = view.findViewById<TextView>(R.id.challengeName)
+        val goalTextView = view.findViewById<TextView>(R.id.challengeGoal)
+        val categoryTextView = view.findViewById<TextView>(R.id.categorySpinner)
+        val dateTextView = view.findViewById<TextView>(R.id.challengeDate)
+
+        val editButton = view.findViewById<Button>(R.id.editButton)
+        val deleteButton = view.findViewById<Button>(R.id.deleteButton)
+
+        nameTextView.text = challenge.name
+        goalTextView.text = challenge.goal
+        categoryTextView.text = challenge.category
+        dateTextView.text = "${challenge.startDate} ~ ${challenge.endDate}"
+
+        // 수정 버튼 클릭
+        editButton.setOnClickListener {
+            if (challenge.isCompleted == 1) {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("수정 불가")
+                    .setMessage("이미 완료된 목표는 수정할 수 없습니다.")
+                    .setPositiveButton("확인") { dialog, _ -> dialog.dismiss() }
+                    .show()
+            } else {
+                val intent = Intent(requireContext(), UpdateTodo::class.java).apply {
+                    putExtra("id", challenge.id)
+                    putExtra("name", challenge.name)
+                    putExtra("goal", challenge.goal)
+                    putExtra("category", challenge.category)
+                }
+                updateLauncher.launch(intent)
+                dialog.dismiss()
+            }
+        }
+
+        // 삭제 버튼 클릭
+        deleteButton.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("삭제 확인")
+                .setMessage("이 목표를 삭제하시겠습니까?")
+                .setPositiveButton("삭제") { _, _ ->
+                    val db = dbManager.writableDatabase
+                    db.delete("Challenges", "id=?", arrayOf(challenge.id.toString()))
+                    db.close()
+                    refreshData()
+                    dialog.dismiss()
+                    Toast.makeText(requireContext(), "챌린지가 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("취소") { dialog, _ -> dialog.dismiss() }
+                .show()
+        }
+
+        dialog.setContentView(view)
+        dialog.show()
+    }
+
+    // 수정 결과 처리
+    private val updateLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == AppCompatActivity.RESULT_OK) {
+            val isUpdated = result.data?.getBooleanExtra("updated", false) ?: false
+            if (isUpdated) {
+                refreshData()
+            }
+        }
+    }
+
+    // D-day 계산
     private fun calculateDDay(startDate: String, duration: Int): String {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return try {
-            val start = dateFormat.parse(startDate)
-            val today = Date()
+        val start = dateFormat.parse(startDate)
+        val today = Date()
 
-            // 시작일과 현재 날짜의 차이 계산
-            val diffInMillis = start.time - today.time
-            val diffInDays = (diffInMillis / (1000 * 60 * 60 * 24)).toInt()
+        val diffInMillis = start.time - today.time
+        val diffInDays = (diffInMillis / (1000 * 60 * 60 * 24)).toInt()
 
-            // 목표 기간이 지나지 않았다면 D-day 값 반환
-            val remainingDays = duration - diffInDays
-            if (remainingDays > 0) {
-                "D-$remainingDays"
-            } else {
-                "D-day"
-            }
-        } catch (e: Exception) {
-            Log.e("FragmentInfoTodo", "Invalid date format: $startDate")
+        val remainingDays = duration - diffInDays
+        return if (remainingDays > 0) {
+            "D-$remainingDays"
+        } else {
             "D-day"
         }
     }
