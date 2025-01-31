@@ -77,7 +77,7 @@ class FragmentAddTodo : Fragment() {
                 val isCompleted = 0
 
                 // DB에 데이터 저장
-                dbManager.insertChallenge(challengeName, goal, category, startDate, duration, isCompleted, dDay)
+                dbManager.insertChallenge(challengeName, goal, category, startDate, duration, isCompleted, dDay, isChecked = false)
 
                 // UI 초기화
                 challengeNameEditText.text.clear()

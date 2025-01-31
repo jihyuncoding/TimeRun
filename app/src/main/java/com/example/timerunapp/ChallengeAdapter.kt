@@ -1,18 +1,24 @@
 package com.example.timerunapp
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.CheckBox
 import android.widget.TextView
+import com.example.timerunapp.Challenge
+import com.example.timerunapp.R
 
 class ChallengeAdapter(
     private val context: Context,
-    private val challenges: MutableList<Challenge>,  // MutableList로 변경
-    private val onChallengeClick: (Challenge) -> Unit // 클릭 이벤트 전달
+    private val challenges: MutableList<Challenge>,
+    private val onChallengeClick: (Challenge) -> Unit
 ) : BaseAdapter() {
+
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences("ChallengePrefs", Context.MODE_PRIVATE)
 
     override fun getCount(): Int = challenges.size
 
@@ -22,69 +28,60 @@ class ChallengeAdapter(
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_challenge, parent, false)
-
         val challenge = challenges[position]
 
         val nameTextView = view.findViewById<TextView>(R.id.challengeName)
         val goalTextView = view.findViewById<TextView>(R.id.challengeGoal)
-        val dateTextView = view.findViewById<TextView>(R.id.challengeDate) // 기간 텍스트 뷰
-        val categoryTextView = view.findViewById<TextView>(R.id.categorySpinner) // 카테고리 텍스트 뷰
-        val checkBox = view.findViewById<CheckBox>(R.id.checkBox) // 체크박스 추가
+        val dateTextView = view.findViewById<TextView>(R.id.challengeDate)
+        val categoryTextView = view.findViewById<TextView>(R.id.categorySpinner)
+        val checkBox = view.findViewById<CheckBox>(R.id.checkBox)
 
-        // 데이터 바인딩
         nameTextView.text = challenge.name
         goalTextView.text = challenge.goal
-        dateTextView.text = challenge.dDay // 기간 표시
-        categoryTextView.text = challenge.category // 카테고리 표시
+        dateTextView.text = challenge.dDay
+        categoryTextView.text = challenge.category
 
-        // 체크박스 상태 설정
-        checkBox.setOnCheckedChangeListener(null) // 리스너 초기화 (중복 방지)
-        checkBox.isChecked = challenge.isChecked // 체크박스 상태 설정
+        // SharedPreferences에서 체크 상태 불러오기
+        val isChecked = getChallengeCheckedStatus(challenge.id)
+        checkBox.isChecked = isChecked
+        challenges[position].isChecked = isChecked  // 리스트에도 반영
 
         // 체크박스 상태 변경 리스너
         checkBox.setOnCheckedChangeListener { _, isChecked ->
-            challenge.isChecked = isChecked // 체크박스 상태 업데이트
+            challenges[position].isChecked = isChecked
+            saveChallengeCheckedStatus(challenge.id, isChecked)
 
-            if (isChecked) {
-                // 체크된 항목을 아래로 이동
-                moveItemDown(position)
-            } else {
-                // 체크 해제된 항목을 위로 이동
-                moveItemUp(position)
-            }
-
-            // 어댑터 갱신하여 상태 반영
+            // 체크된 비율 계산 및 저장
+            saveCheckedPercentage()
             notifyDataSetChanged()
         }
 
-        // 각 항목에 클릭 이벤트 설정
         view.setOnClickListener {
-            onChallengeClick(challenge) // 클릭된 챌린지 객체를 전달
+            onChallengeClick(challenge)
         }
 
         return view
     }
 
-    // 체크된 항목을 아래로 이동
-    private fun moveItemDown(position: Int) {
-        val item = challenges[position]
-        challenges.removeAt(position)
-        challenges.add(item) // 마지막에 항목을 추가하여 아래로 이동
+    private fun getChallengeCheckedStatus(challengeId: Int): Boolean {
+        return sharedPreferences.getBoolean("challenge_$challengeId", false)
     }
 
-    // 체크 해제된 항목을 위로 이동
-    private fun moveItemUp(position: Int) {
-        val item = challenges[position]
-        challenges.removeAt(position)
+    private fun saveChallengeCheckedStatus(challengeId: Int, isChecked: Boolean) {
+        sharedPreferences.edit().putBoolean("challenge_$challengeId", isChecked).apply()
+    }
 
-        // 체크되지 않은 항목들보다 위로 이동
-        val insertPosition = challenges.indexOfFirst { it.isChecked }
-        if (insertPosition == -1) {
-            // 모든 항목이 체크 해제된 상태라면 맨 아래로 이동
-            challenges.add(item)
-        } else {
-            // 체크된 항목들 바로 위에 삽입
-            challenges.add(insertPosition, item)
-        }
+    // 체크된 항목의 비율을 계산하고 저장하는 함수
+    fun saveCheckedPercentage() {
+        val checkedCount = challenges.count { it.isChecked }
+        val totalCount = challenges.size
+        val percentage = if (totalCount > 0) (checkedCount * 100) / totalCount else 0
+
+        sharedPreferences.edit().putInt("checked_percentage", percentage).apply()
+    }
+
+    // 다른 화면에서 값을 가져올 수 있도록 SharedPreferences에서 불러오는 함수
+    fun getCheckedPercentage(): Int {
+        return sharedPreferences.getInt("checked_percentage", 0)
     }
 }
