@@ -38,6 +38,12 @@ class UpdateTodo : AppCompatActivity() {
         val goal = intent.getStringExtra("goal") ?: ""
         val category = intent.getStringExtra("category") ?: ""
 
+        // 뒤로가기 버튼
+        val backButton: ImageView = findViewById(R.id.backButton)
+        backButton.setOnClickListener {
+            finish()  // 현재 액티비티 종료 (이전 화면으로 이동)
+        }
+
         // UI에 기존 데이터 표시
         challengeNameInput.setText(name)
         goalInput.setText(goal)

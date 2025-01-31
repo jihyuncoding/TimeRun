@@ -15,6 +15,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/logo" />
 
+    <ImageView
+        android:id="@+id/backButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginLeft="28dp"
+        android:layout_marginTop="44dp"
+        android:src="@drawable/ic_back"
+        android:contentDescription="뒤로 가기"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
     <EditText
         android:id="@+id/challengeName"
         android:layout_width="0dp"

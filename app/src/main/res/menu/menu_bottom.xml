@@ -4,7 +4,7 @@
 <item
     android:id="@+id/fragment_search"
     android:title="목록"
-    android:icon="@drawable/information"/>
+    android:icon="@drawable/check"/>
 <item
     android:id="@+id/fragment_home"
     android:title="홈"
@@ -13,4 +13,5 @@
     android:id="@+id/fragment_add"
     android:title="추가"
     android:icon="@drawable/add"/>
+
 </menu>
