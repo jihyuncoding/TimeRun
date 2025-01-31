@@ -13,7 +13,7 @@ import org.json.JSONArray
 class ChallengeAdapter(
     private val context: Context,
     private val challenges: MutableList<Challenge>,
-    private val onChallengeClick: (Challenge) -> Unit
+    private val onChallengeClick: (Challenge, View) -> Unit
 ) : BaseAdapter() {
 
     private val sharedPreferences: SharedPreferences =
@@ -69,7 +69,7 @@ class ChallengeAdapter(
         }
 
         view.setOnClickListener {
-            onChallengeClick(challenge)
+            onChallengeClick(challenge, view)
         }
 
         return view
