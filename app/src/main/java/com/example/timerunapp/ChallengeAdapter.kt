@@ -8,8 +8,7 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.CheckBox
 import android.widget.TextView
-import com.example.timerunapp.Challenge
-import com.example.timerunapp.R
+import org.json.JSONArray
 
 class ChallengeAdapter(
     private val context: Context,
@@ -19,6 +18,10 @@ class ChallengeAdapter(
 
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("ChallengePrefs", Context.MODE_PRIVATE)
+
+    init {
+        loadOrderFromPreferences() // 저장된 순서 로드
+    }
 
     override fun getCount(): Int = challenges.size
 
@@ -41,17 +44,26 @@ class ChallengeAdapter(
         dateTextView.text = challenge.dDay
         categoryTextView.text = challenge.category
 
+        // 기존 리스너 제거 (중복 호출 방지)
+        checkBox.setOnCheckedChangeListener(null)
+
         // SharedPreferences에서 체크 상태 불러오기
         val isChecked = getChallengeCheckedStatus(challenge.id)
-        checkBox.isChecked = isChecked
-        challenges[position].isChecked = isChecked  // 리스트에도 반영
+        challenge.isChecked = isChecked
+        checkBox.isChecked = isChecked // UI에 반영
 
-        // 체크박스 상태 변경 리스너
+        // 체크박스 상태 변경 리스너 설정
         checkBox.setOnCheckedChangeListener { _, isChecked ->
-            challenges[position].isChecked = isChecked
+            challenge.isChecked = isChecked
             saveChallengeCheckedStatus(challenge.id, isChecked)
 
-            // 체크된 비율 계산 및 저장
+            if (isChecked) {
+                moveItemToCheckedGroup(position)
+            } else {
+                moveItemToUncheckedGroup(position)
+            }
+
+            saveOrderToPreferences() // 순서 저장
             saveCheckedPercentage()
             notifyDataSetChanged()
         }
@@ -61,6 +73,51 @@ class ChallengeAdapter(
         }
 
         return view
+    }
+
+    // 체크된 항목들 중에서 최상단으로 이동
+    private fun moveItemToCheckedGroup(position: Int) {
+        val item = challenges.removeAt(position)
+
+        // 체크된 그룹의 첫 번째 위치 찾기
+        val insertPosition = challenges.indexOfFirst { it.isChecked }.takeIf { it >= 0 } ?: challenges.size
+        challenges.add(insertPosition, item)
+    }
+
+    // 체크되지 않은 항목들 중 가장 아래로 이동
+    private fun moveItemToUncheckedGroup(position: Int) {
+        val item = challenges.removeAt(position)
+
+        // 체크되지 않은 그룹의 마지막 위치 찾기
+        val insertPosition = challenges.indexOfFirst { it.isChecked }.takeIf { it >= 0 } ?: challenges.size
+        challenges.add(insertPosition, item)
+    }
+
+    // 순서를 SharedPreferences에 저장
+    private fun saveOrderToPreferences() {
+        val orderArray = JSONArray()
+        challenges.forEach { challenge -> orderArray.put(challenge.id) }
+
+        sharedPreferences.edit().putString("challenge_order", orderArray.toString()).apply()
+    }
+
+    // 저장된 순서를 불러오기
+    private fun loadOrderFromPreferences() {
+        val orderString = sharedPreferences.getString("challenge_order", null)
+
+        if (!orderString.isNullOrEmpty()) {
+            val orderArray = JSONArray(orderString)
+            val orderedChallenges = mutableListOf<Challenge>()
+
+            for (i in 0 until orderArray.length()) {
+                val challengeId = orderArray.getInt(i)
+                challenges.find { it.id == challengeId }?.let { orderedChallenges.add(it) }
+            }
+
+            // 기존 리스트 업데이트
+            challenges.clear()
+            challenges.addAll(orderedChallenges)
+        }
     }
 
     private fun getChallengeCheckedStatus(challengeId: Int): Boolean {
@@ -80,7 +137,6 @@ class ChallengeAdapter(
         sharedPreferences.edit().putInt("checked_percentage", percentage).apply()
     }
 
-    // 다른 화면에서 값을 가져올 수 있도록 SharedPreferences에서 불러오는 함수
     fun getCheckedPercentage(): Int {
         return sharedPreferences.getInt("checked_percentage", 0)
     }
