@@ -1,7 +1,6 @@
 package com.example.timerunapp
 
 import android.app.AlertDialog
-import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -26,15 +25,12 @@ class FragmentInfoTodo : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // fragment_info_todo.xml 레이아웃 연결
         val rootView = inflater.inflate(R.layout.fragment_info_todo, container, false)
 
         dbManager = DBManager(requireContext())
 
-        // ListView 연결
         listView = rootView.findViewById(R.id.listView)
 
-        // 데이터 로드 및 UI 초기화
         refreshData()
 
         return rootView
@@ -57,27 +53,24 @@ class FragmentInfoTodo : Fragment() {
                 val isCompleted = cursor.getInt(cursor.getColumnIndexOrThrow("is_completed"))
                 val endDate = cursor.getString(cursor.getColumnIndexOrThrow("end_date")) ?: "0000-00-00"
 
-                // D-Day 계산
                 val dDay = calculateDDay(startDate, duration)
 
                 challenges.add(
-                    Challenge(
-                        id, name, goal, category, startDate, duration, isCompleted, dDay, endDate
-                    )
+                    Challenge(id, name, goal, category, startDate, duration, isCompleted, dDay, endDate)
                 )
             } while (cursor.moveToNext())
         }
         cursor.close()
 
-        // 어댑터 연결
-        adapter = ChallengeAdapter(requireContext(), challenges) { challenge ->
-            showChallengeDetails(challenge)
+        // ChallengeAdapter 수정: View도 전달하도록 변경
+        adapter = ChallengeAdapter(requireContext(), challenges) { challenge, view ->
+            showChallengeDetails(challenge, view)
         }
         listView.adapter = adapter
     }
 
-    // 세부 정보 표시
-    private fun showChallengeDetails(challenge: Challenge) {
+    // 세부 정보 표시 다이얼로그
+    private fun showChallengeDetails(challenge: Challenge, itemView: View) {
         val dialog = BottomSheetDialog(requireContext())
         val view = layoutInflater.inflate(R.layout.dialog_challenge_details, null)
 
@@ -89,29 +82,32 @@ class FragmentInfoTodo : Fragment() {
         val editButton = view.findViewById<Button>(R.id.editButton)
         val deleteButton = view.findViewById<Button>(R.id.deleteButton)
 
+        // 리스트 아이템 뷰에서 체크박스를 가져옴
+        val checkBox = itemView.findViewById<CheckBox>(R.id.checkBox)
+
         nameTextView.text = challenge.name
         goalTextView.text = challenge.goal
         categoryTextView.text = challenge.category
         dateTextView.text = "${challenge.startDate} ~ ${challenge.endDate}"
 
+        // 체크박스 상태에 따라 수정 버튼 활성화/비활성화
+        editButton.isEnabled = !checkBox.isChecked
+
+        // 체크박스 상태 변경 시 수정 버튼 활성화/비활성화 업데이트
+        checkBox.setOnCheckedChangeListener { _, isChecked ->
+            editButton.isEnabled = !isChecked
+        }
+
         // 수정 버튼 클릭
         editButton.setOnClickListener {
-            if (challenge.isCompleted == 1) {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("수정 불가")
-                    .setMessage("이미 완료된 목표는 수정할 수 없습니다.")
-                    .setPositiveButton("확인") { dialog, _ -> dialog.dismiss() }
-                    .show()
-            } else {
-                val intent = Intent(requireContext(), UpdateTodo::class.java).apply {
-                    putExtra("id", challenge.id)
-                    putExtra("name", challenge.name)
-                    putExtra("goal", challenge.goal)
-                    putExtra("category", challenge.category)
-                }
-                updateLauncher.launch(intent)
-                dialog.dismiss()
+            val intent = Intent(requireContext(), UpdateTodo::class.java).apply {
+                putExtra("id", challenge.id)
+                putExtra("name", challenge.name)
+                putExtra("goal", challenge.goal)
+                putExtra("category", challenge.category)
             }
+            updateLauncher.launch(intent)
+            dialog.dismiss()
         }
 
         // 삭제 버튼 클릭
@@ -136,16 +132,17 @@ class FragmentInfoTodo : Fragment() {
     }
 
     // 수정 결과 처리
-    private val updateLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == AppCompatActivity.RESULT_OK) {
-            val isUpdated = result.data?.getBooleanExtra("updated", false) ?: false
-            if (isUpdated) {
-                refreshData()
+    private val updateLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == AppCompatActivity.RESULT_OK) {
+                val isUpdated = result.data?.getBooleanExtra("updated", false) ?: false
+                if (isUpdated) {
+                    refreshData()
+                }
             }
         }
-    }
 
-    // D-day 계산
+    // D-day 계산 함수
     private fun calculateDDay(startDate: String, duration: Int): String {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val start = dateFormat.parse(startDate)
