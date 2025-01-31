@@ -82,7 +82,7 @@ class FragmentInfoTodo : Fragment() {
         val editButton = view.findViewById<Button>(R.id.editButton)
         val deleteButton = view.findViewById<Button>(R.id.deleteButton)
 
-        // 리스트 아이템 뷰에서 체크박스를 가져옴
+        // ✅ 리스트 아이템 뷰에서 체크박스를 가져옴
         val checkBox = itemView.findViewById<CheckBox>(R.id.checkBox)
 
         nameTextView.text = challenge.name
@@ -90,27 +90,28 @@ class FragmentInfoTodo : Fragment() {
         categoryTextView.text = challenge.category
         dateTextView.text = "${challenge.startDate} ~ ${challenge.endDate}"
 
-        // 체크박스 상태에 따라 수정 버튼 활성화/비활성화
-        editButton.isEnabled = !checkBox.isChecked
+        // ✅ 수정 버튼을 항상 활성화 상태로 유지 (색상 변화 X)
+        editButton.isEnabled = true
 
-        // 체크박스 상태 변경 시 수정 버튼 활성화/비활성화 업데이트
-        checkBox.setOnCheckedChangeListener { _, isChecked ->
-            editButton.isEnabled = !isChecked
-        }
-
-        // 수정 버튼 클릭
+        // ✅ 수정 버튼 클릭 이벤트
         editButton.setOnClickListener {
-            val intent = Intent(requireContext(), UpdateTodo::class.java).apply {
-                putExtra("id", challenge.id)
-                putExtra("name", challenge.name)
-                putExtra("goal", challenge.goal)
-                putExtra("category", challenge.category)
+            if (checkBox.isChecked) {
+                // ✅ 체크박스가 체크된 경우 → 경고 메시지 표시
+                Toast.makeText(requireContext(), "완료된 목표는 수정이 불가합니다.", Toast.LENGTH_SHORT).show()
+            } else {
+                // ✅ 체크박스가 체크되지 않은 경우 → 정상적으로 수정 화면 이동
+                val intent = Intent(requireContext(), UpdateTodo::class.java).apply {
+                    putExtra("id", challenge.id)
+                    putExtra("name", challenge.name)
+                    putExtra("goal", challenge.goal)
+                    putExtra("category", challenge.category)
+                }
+                updateLauncher.launch(intent)
+                dialog.dismiss()
             }
-            updateLauncher.launch(intent)
-            dialog.dismiss()
         }
 
-        // 삭제 버튼 클릭
+        // ✅ 삭제 버튼 클릭
         deleteButton.setOnClickListener {
             AlertDialog.Builder(requireContext())
                 .setTitle("삭제 확인")
